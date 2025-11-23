@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 敏捷思維研討會報名表單</title>
+    <!-- 引入 Tailwind CSS for modern styling and responsiveness -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the vibrant background gradient */
+        body {
+            /* Lively gradient: Red-Orange to Teal-Blue */
+            background-color: #f0fdfa; /* Fallback color */
+            background-image: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Container card styling */
+        .card-container {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 24px; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            animation: bounceIn 1s ease-out;
+        }
+
+        /* Animation for a lively entrance */
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            60% { transform: scale(1.03); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* Highlight color definitions */
+        .color-primary { color: #FF6B6B; }
+        .bg-primary { background-color: #FF6B6B; }
+        .color-secondary { color: #4ECDC4; }
+        .bg-secondary { background-color: #4ECDC4; }
+
+        /* Specific styles for the agenda table */
+        .agenda-table th {
+            background-color: #4ECDC4;
+            color: white;
+            border-bottom: 2px solid #3bb3aa;
+        }
+        .agenda-table tr:nth-child(even) {
+            background-color: #f0fdfa; /* Very light teal */
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal/Message Box Styling */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 12px;
+            z-index: 1000;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease-out;
+            opacity: 0;
+            visibility: hidden;
+        }
+        .message-box.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box.success {
+            background-color: #e6fffa; /* Tailwind Green-100 */
+            border: 2px solid #38b2ac; /* Tailwind Teal-500 */
+            color: #2c7a7b; /* Tailwind Teal-800 */
+        }
+        .message-box.error {
+            background-color: #fff5f5; /* Tailwind Red-100 */
+            border: 2px solid #f56565; /* Tailwind Red-500 */
+            color: #9b2c2c; /* Tailwind Red-800 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card-container">
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold color-primary mb-2 animate-pulse">
+                🎉 敏捷思維導入教學行政 🎉
+            </h1>
+            <h2 class="text-xl md:text-2xl color-secondary font-semibold">
+                Hello World 2025 開發者大會心得分享暨實務研討會
+            </h2>
+        </header>
+
+        <!-- I. 活動資訊 -->
+        <section class="mb-8 p-6 bg-green-50/50 rounded-xl border-l-4 border-secondary shadow-inner">
+            <h3 class="text-2xl font-bold color-primary mb-4 border-b-2 border-dashed border-red-300 pb-2">
+                活動資訊 (Activity Info)
+            </h3>
+            <p class="mb-4 text-gray-700">
+                <strong>目的：</strong> 分享「敏捷開發 (Agile)」的核心精神，並共同探討如何將其應用於教學部的日常行政、專案管理 (如 QCC、OSCE 籌備) 中，以提升團隊效率與應變能力。
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg font-medium">
+                <div class="flex items-center text-gray-700">
+                    <span class="color-secondary mr-2 text-2xl">📅</span>
+                    <strong>日期：</strong> 2025 年 11 月 30 日 (日)
+                </div>
+                <div class="flex items-center text-gray-700">
+                    <span class="color-secondary mr-2 text-2xl">⏰</span>
+                    <strong>時間：</strong> 14:00 - 17:00 (共 3 小時)
+                </div>
+                <div class="flex items-center text-gray-700">
+                    <span class="color-secondary mr-2 text-2xl">📍</span>
+                    <strong>地點：</strong> 第五醫療大樓5F552會議室
+                </div>
+            </div>
+        </section>
+
+        <!-- II. 活動議程 - 增加 TTS 功能 -->
+        <section class="mb-8 p-6 bg-red-50/50 rounded-xl border-l-4 border-primary shadow-inner">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold color-primary border-b-2 border-dashed border-red-300 pb-2 inline-block">
+                    活動議程 (Agenda)
+                </h3>
+                <button id="ttsButton" onclick="generateTts()" 
+                        class="flex items-center py-2 px-4 bg-secondary text-white font-bold rounded-full text-sm hover:bg-teal-500 transition duration-300">
+                    <span id="ttsText">🗣️ 朗讀議程</span>
+                    <div id="ttsSpinner" class="hidden spinner ml-2"></div>
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table id="agendaTable" class="agenda-table w-full text-left rounded-lg overflow-hidden shadow-md">
+                    <thead>
+                        <tr>
+                            <th class="p-3 text-sm uppercase tracking-wider rounded-tl-lg w-1/4">時間</th>
+                            <th class="p-3 text-sm uppercase tracking-wider rounded-tr-lg w-3/4">內容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">14:00 - 14:15</td>
+                            <td class="p-3">報到與暖身 (Check-in) 領取名牌、享用茶點，並透過簡單的破冰遊戲認識跨部門夥伴。</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">14:15 - 15:00</td>
+                            <td class="p-3">Session 1: 擁抱變化的勇氣 從 Hello World 2025 開發者大會看見趨勢。什麼是 Agile？為什麼原本用於軟體開發的思維，能解決行政工作的痛點？</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">15:00 - 15:10</td>
+                            <td class="p-3 bg-yellow-100/70 font-medium">中場休息 (Break) 大腦充電與自由交流時間。</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">15:10 - 16:00</td>
+                            <td class="p-3">Session 2: 行政實務應用案例 不再被 Deadline 追著跑！分享如何利用「視覺化看板 (Kanban)」與「迭代 (Iteration)」來優化 QCC 專案與 OSCE 考試籌備流程。</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">16:00 - 16:40</td>
+                            <td class="p-3">Workshop: 敏捷實戰演練 分組工作坊：針對目前的行政痛點，實際演練一次「站立會議 (Daily Stand-up)」與「回顧會議 (Retrospective)」。</td>
+                        </tr>
+                        <tr>
+                            <td class="p-3 font-semibold color-primary">16:40 - 17:00</td>
+                            <td class="p-3">總結與問答 (Q&A) 開放提問與講師總結。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <audio id="ttsAudio" controls class="hidden w-full mt-4"></audio>
+        </section>
+
+        <!-- III. 報名表單 - 增加 LLM 生成 Q&A 範例 -->
+        <section class="p-6 bg-white rounded-xl shadow-lg border-t-8 border-secondary">
+            <h3 class="text-2xl font-bold color-secondary mb-6 border-b-2 border-secondary pb-2">
+                <span class="text-3xl mr-2">📝</span> 基本資料與提問 (Registration & Inquiry)
+            </h3>
+            
+            <!-- 修改表單: 移除 action/method, 改用 onsubmit 呼叫 JavaScript 處理 -->
+            <form id="registrationForm" onsubmit="handleSubmit(event)" class="space-y-6">
+                <!-- 姓名 -->
+                <div>
+                    <label for="name" class="block text-lg font-medium text-gray-700 mb-2">
+                        姓名 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="name" name="name" required
+                           class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-4 focus:ring-red-200 transition duration-300"
+                           placeholder="請輸入您的姓名">
+                </div>
+
+                <!-- 電子郵件 -->
+                <div>
+                    <label for="email" class="block text-lg font-medium text-gray-700 mb-2">
+                        電子郵件 (Email) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="email" name="email" required
+                           class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-4 focus:ring-red-200 transition duration-300"
+                           placeholder="example@hospital.com.tw">
+                </div>
+
+                <!-- 單位 -->
+                <div>
+                    <label for="unit" class="block text-lg font-medium text-gray-700 mb-2">
+                        單位 <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="unit" name="unit" required
+                           class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-4 focus:ring-red-200 transition duration-300"
+                           placeholder="請輸入您的服務單位/部門">
+                </div>
+
+                <!-- 職稱 -->
+                <div>
+                    <label class="block text-lg font-medium text-gray-700 mb-2">
+                        職稱 (必填) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex flex-wrap gap-x-6 gap-y-3">
+                        <!-- Radio buttons for Title -->
+                        <!-- 確保所有 Radio Button 的 name 屬性都為 'jobTitle' -->
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="jobTitle" value="醫師" required class="form-radio h-5 w-5 text-secondary accent-secondary">
+                            <span class="ml-2 text-gray-700">醫師</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="jobTitle" value="護理師" class="form-radio h-5 w-5 text-secondary accent-secondary">
+                            <span class="ml-2 text-gray-700">護理師</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="jobTitle" value="醫事人員" class="form-radio h-5 w-5 text-secondary accent-secondary">
+                            <span class="ml-2 text-gray-700">醫事人員</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="jobTitle" value="行政人員" class="form-radio h-5 w-5 text-secondary accent-secondary">
+                            <span class="ml-2 text-gray-700">行政人員</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="jobTitle" value="其他" class="form-radio h-5 w-5 text-secondary accent-secondary">
+                            <span class="ml-2 text-gray-700">其他</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 是否需要茶水點心 -->
+                <div>
+                    <label class="block text-lg font-medium text-gray-700 mb-2">
+                        是否需要茶水點心？ <span class="text-red-500">*</span>
+                    </label>
+                    <div class="flex flex-wrap gap-x-6 gap-y-3">
+                         <!-- 確保所有 Radio Button 的 name 屬性都為 'snackNeeded' -->
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="snackNeeded" value="是" required class="form-radio h-5 w-5 text-primary accent-primary">
+                            <span class="ml-2 text-gray-700 font-semibold">是 (需要)</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="snackNeeded" value="否" class="form-radio h-5 w-5 text-primary accent-primary">
+                            <span class="ml-2 text-gray-700">否 (不需要)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 會前提問 - 增加 LLM 互動區 -->
+                <div>
+                    <label for="pre_question" class="block text-lg font-medium text-gray-700 mb-2">
+                        會前提問 (選填)
+                    </label>
+
+                    <!-- LLM Generated Q&A Section -->
+                    <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <button id="qnaButton" onclick="generateQnAExamples()" type="button" 
+                                class="flex items-center py-2 px-4 bg-primary text-white font-bold rounded-xl text-sm hover:bg-red-500 transition duration-300">
+                            <span id="qnaText">✨ 生成 Q&A 範例 (激發提問靈感)</span>
+                            <div id="qnaSpinner" class="hidden spinner ml-2 border-top-white border-white"></div>
+                        </button>
+                        <div id="qnaOutput" class="mt-3 text-sm text-gray-700 whitespace-pre-wrap"></div>
+                    </div>
+
+                    <textarea id="pre_question" name="preQuestion" rows="4"
+                              class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-primary focus:ring-4 focus:ring-red-200 transition duration-300"
+                              placeholder="請填寫您的問題。例如：敏捷思維導入行政會增加初期負擔嗎？"></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="submitButton"
+                        class="w-full py-4 bg-primary text-white font-bold text-xl rounded-xl shadow-lg hover:bg-red-500 transition duration-300 transform hover:scale-[1.01] hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-red-300">
+                    🚀 立即報名，提升行政效率！
+                </button>
+            </form>
+        </section>
+
+        <!-- Footer Section -->
+        <footer class="mt-8 pt-4 border-t border-gray-200 text-center text-sm text-gray-600">
+            <p><strong>主辦單位：</strong> 奇美醫院教學部</p>
+            <p><strong>聯絡人：</strong> 盧英云 (分機57425)</p>
+            <p class="mt-2 text-xs italic">
+                本報名資料僅供本次研討會聯繫與餐點統計使用，確保您的個人資訊安全無虞。
+            </p>
+        </footer>
+    </div>
+    
+    <!-- 報名結果訊息框 -->
+    <div id="messageBox" class="message-box"></div>
+
+<script>
+    // --------------------------------------------------------------------------------
+    // !!! Apps Script 網頁應用程式 URL (已確認為您提供的網址) !!!
+    // --------------------------------------------------------------------------------
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1UAwdg29gaBCElJxzsBL5aHXVAklqRzNy7mu3nok9-MvxmNWkXL8cqgRUZqClanzFug/exec'; 
+    
+    // --- Gemini API Configuration and Utility Functions ---
+    const API_URL_TEXT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=';
+    const API_URL_TTS = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=';
+    const apiKey = ""; 
+
+    /** Utility functions for TTS and API (base64ToArrayBuffer, pcmToWav, fetchWithBackoff) kept for completeness */
+    function base64ToArrayBuffer(base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    function pcmToWav(pcm16, sampleRate) {
+        const numChannels = 1;
+        const bitsPerSample = 16;
+        const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+        const view = new DataView(buffer);
+        let offset = 0;
+
+        function writeString(s) {
+            for (let i = 0; i < s.length; i++) {
+                view.setUint8(offset + i, s.charCodeAt(i));
+            }
+            offset += s.length;
+        }
+
+        /* RIFF identifier */
+        writeString('RIFF'); offset += 4;
+        /* file length */
+        view.setUint32(offset, 36 + pcm16.length * 2, true); offset += 4;
+        /* RIFF type */
+        writeString('WAVE'); offset += 4;
+        /* format chunk identifier */
+        writeString('fmt '); offset += 4;
+        /* format chunk length */
+        view.setUint32(offset, 16, true); offset += 4;
+        /* sample format (1 for PCM) */
+        view.setUint16(offset, 1, true); offset += 2;
+        /* number of channels */
+        view.setUint16(offset, numChannels, true); offset += 2;
+        /* sample rate */
+        view.setUint32(offset, sampleRate, true); offset += 4;
+        /* byte rate (sample rate * block align) */
+        view.setUint32(offset, sampleRate * numChannels * bitsPerSample / 8, true); offset += 4;
+        /* block align (num channels * bits per sample / 8) */
+        view.setUint16(offset, numChannels * bitsPerSample / 8, true); offset += 2;
+        /* bits per sample */
+        view.setUint16(offset, bitsPerSample, true); offset += 2;
+        /* data chunk identifier */
+        writeString('data'); offset += 4;
+        /* data chunk length */
+        view.setUint32(offset, pcm16.length * 2, true); offset += 4;
+
+        // Write PCM data
+        for (let i = 0; i < pcm16.length; i++) {
+            view.setInt16(offset, pcm16[i], true);
+            offset += 2;
+        }
+
+        return new Blob([view], { type: 'audio/wav' });
+    }
+
+    async function fetchWithBackoff(url, options, maxRetries = 5) {
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
+            try {
+                const response = await fetch(url, options);
+                if (response.status === 429 || response.status >= 500) {
+                    throw new Error(`Server error or rate limit hit: ${response.status}`);
+                }
+                if (!response.ok) {
+                    const errorBody = await response.json().catch(() => ({}));
+                    console.error('API Error Response:', errorBody);
+                    throw new Error(`API failed: ${response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.warn(`Attempt ${attempt + 1} failed: ${error.message}. Retrying...`);
+                if (attempt === maxRetries - 1) {
+                    throw error;
+                }
+                const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
+
+    // --- Form Submission Handler ---
+
+    const submitButton = document.getElementById('submitButton');
+    const registrationForm = document.getElementById('registrationForm');
+    const messageBox = document.getElementById('messageBox');
+    
+    /**
+     * 顯示自定義訊息框
+     * @param {string} message - 要顯示的訊息
+     * @param {string} type - 訊息類型 ('success' or 'error')
+     */
+    function showMessage(message, type) {
+        messageBox.textContent = message;
+        messageBox.className = `message-box show ${type}`;
+        
+        // 5 秒後自動隱藏
+        setTimeout(() => {
+            messageBox.classList.remove('show');
+        }, 5000);
+    }
+
+    /**
+     * 獲取選中的 Radio Button 值
+     * @param {string} name - Radio Button 的 name 屬性
+     * @returns {string | null} 選中的值
+     */
+    function getSelectedRadioValue(name) {
+        const radios = document.getElementsByName(name);
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                return radios[i].value;
+            }
+        }
+        return '';
+    }
+
+    /**
+     * 處理表單提交
+     * @param {Event} event - 提交事件
+     */
+    async function handleSubmit(event) {
+        event.preventDefault(); // 阻止瀏覽器默認的表單提交行為
+
+        // 收集表單資料並手動構造與 Apps Script 期望格式匹配的物件
+        const data = {
+            // 注意：Apps Script 的 doPost(e) 會將這些作為參數名稱
+            // 請確保這些名稱與 Apps Script 程式碼中取的名稱一致
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            unit: document.getElementById('unit').value,
+            jobTitle: getSelectedRadioValue('jobTitle'), // 使用更新後的 name 屬性
+            snackNeeded: getSelectedRadioValue('snackNeeded'), // 使用更新後的 name 屬性
+            preQuestion: document.getElementById('pre_question').value // 使用更新後的 name 屬性
+        };
+        
+        // 將資料轉換為 URLSearchParams
+        const urlParams = new URLSearchParams();
+        for (const key in data) {
+            urlParams.append(key, data[key]);
+        }
+
+        // 禁用按鈕並顯示載入狀態
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<div class="spinner mx-auto border-top-white border-white"></div> 報名資料傳送中...';
+        
+        try {
+            // 使用 fetch 發送 POST 請求到 Apps Script 網址
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors', 
+                cache: 'no-cache',
+                body: urlParams
+            });
+
+            // 檢查 HTTP 狀態碼
+            if (!response.ok) {
+                 // 如果 HTTP 狀態碼不是 200-299，直接拋出錯誤
+                throw new Error(`HTTP 錯誤狀態碼: ${response.status}`);
+            }
+
+            // Apps Script 應返回 JSON 格式的內容
+            const result = await response.json();
+
+            if (result.result === 'success') {
+                showMessage('✅ 報名成功！感謝您的參與。資料已寫入試算表。', 'success');
+                registrationForm.reset(); // 清空表單
+            } else {
+                // Apps Script 處理失敗 (例如試算表名稱錯誤)
+                throw new Error(result.message || 'Apps Script 返回失敗訊息。');
+            }
+
+        } catch (error) {
+            console.error('提交報名表發生錯誤:', error);
+            // 嘗試解析錯誤訊息，提供更友善的提示
+            let friendlyMessage = '報名失敗！請確認 Apps Script 已部署並允許「任何人」存取。';
+            if (error.message.includes('HTTP 錯誤狀態碼: 404')) {
+                 friendlyMessage = '報名失敗！Apps Script 網址可能不正確或應用程式不存在。';
+            } else if (error.message.includes('Apps Script 返回失敗訊息')) {
+                 friendlyMessage = `報名失敗！後端錯誤：${error.message.split('後端錯誤：')[1] || '請檢查 Apps Script 程式碼。'}`;
+            }
+
+            showMessage(`❌ ${friendlyMessage}`, 'error');
+        } finally {
+            // 恢復按鈕狀態
+            submitButton.disabled = false;
+            submitButton.innerHTML = '🚀 立即報名，提升行政效率！';
+        }
+    }
+
+
+    // --- Feature 1: Generate Q&A Examples (Unchanged) ---
+
+    const qnaButton = document.getElementById('qnaButton');
+    const qnaText = document.getElementById('qnaText');
+    const qnaSpinner = document.getElementById('qnaSpinner');
+    const qnaOutput = document.getElementById('qnaOutput');
+    const activityPurpose = document.querySelector('p.mb-4 strong').parentElement.textContent;
+
+    async function generateQnAExamples() {
+        qnaButton.disabled = true;
+        qnaText.textContent = '生成中...';
+        qnaSpinner.classList.remove('hidden');
+        qnaOutput.textContent = ''; // Clear previous output
+
+        const userPrompt = `根據以下研討會主題和目的，請生成三個與「敏捷思維導入行政」相關的常見問題 (Q) 及簡短的參考回答 (A)。答案需為繁體中文，並以純文本格式輸出，每個問題和回答之間用一個空行分隔：\n\n主題與目的: ${activityPurpose}`;
+        
+        const payload = {
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: {
+                parts: [{ text: "您是一位專業的行政管理顧問。請以友善且實用的語氣，針對行政痛點提供敏捷解方相關的Q&A。" }]
+            },
+        };
+
+        try {
+            const result = await fetchWithBackoff(API_URL_TEXT + apiKey, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '未能生成範例，請稍後再試。';
+            qnaOutput.textContent = text;
+
+        } catch (error) {
+            console.error('Error generating QnA:', error);
+            qnaOutput.textContent = '😵 發生錯誤，無法生成 Q&A 範例。請檢查網路或稍後再試。';
+        } finally {
+            qnaButton.disabled = false;
+            qnaText.textContent = '✨ 生成 Q&A 範例 (激發提問靈感)';
+            qnaSpinner.classList.add('hidden');
+        }
+    }
+
+
+    // --- Feature 2: Agenda TTS (Text-to-Speech) (Unchanged) ---
+
+    const ttsButton = document.getElementById('ttsButton');
+    const ttsText = document.getElementById('ttsText');
+    const ttsSpinner = document.getElementById('ttsSpinner');
+    const ttsAudio = document.getElementById('ttsAudio');
+    const agendaTable = document.getElementById('agendaTable');
+
+    async function generateTts() {
+        ttsButton.disabled = true;
+        ttsText.textContent = '朗讀準備中...';
+        ttsSpinner.classList.remove('hidden');
+        ttsAudio.classList.add('hidden');
+        ttsAudio.pause();
+        ttsAudio.src = '';
+        
+        // 1. Compile the full agenda text
+        let ttsPrompt = "請用溫暖且具活力的語氣，朗讀以下研討會的活動議程：\n\n";
+        const rows = agendaTable.querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const time = row.cells[0].textContent.trim();
+            const content = row.cells[1].textContent.trim();
+            ttsPrompt += `時間 ${time}。內容：${content}。\n`;
+        });
+        
+        // Use a suitable female voice (Aoede: Breezy/Lively) for the TTS model
+        const payload = {
+            contents: [{ parts: [{ text: ttsPrompt }] }],
+            generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                    voiceConfig: {
+                        prebuiltVoiceConfig: { voiceName: "Aoede" } // Using a lively voice
+                    }
+                }
+            },
+        };
+
+        try {
+            const result = await fetchWithBackoff(API_URL_TTS + apiKey, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            const audioData = part?.inlineData?.data;
+            const mimeType = part?.inlineData?.mimeType;
+
+            if (audioData && mimeType && mimeType.startsWith("audio/L16")) {
+                const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                if (!sampleRateMatch) {
+                    throw new Error("Missing sample rate in MIME type.");
+                }
+                const sampleRate = parseInt(sampleRateMatch[1], 10);
+                
+                // Convert base64 audio to WAV format
+                const pcmData = base64ToArrayBuffer(audioData);
+                const pcm16 = new Int16Array(pcmData);
+                const wavBlob = pcmToWav(pcm16, sampleRate);
+                
+                // Create object URL and play
+                ttsAudio.src = URL.createObjectURL(wavBlob);
+                ttsAudio.classList.remove('hidden');
+                await ttsAudio.play();
+                ttsText.textContent = '🗣️ 朗讀完成/再聽一次';
+            } else {
+                throw new Error("Invalid or missing audio data in response.");
+            }
+
+        } catch (error) {
+            console.error('Error generating TTS:', error);
+            ttsAudio.classList.remove('hidden');
+            ttsAudio.controls = false;
+            ttsAudio.parentElement.querySelector('#ttsText').textContent = '⚠️ 朗讀失敗';
+            // Use a custom message box instead of alert()
+            const messageBox = ttsAudio.parentElement.querySelector('#ttsOutput') || document.createElement('div');
+            messageBox.id = 'ttsOutput';
+            messageBox.className = 'mt-2 p-2 bg-red-100 text-red-700 rounded-lg text-sm';
+            messageBox.textContent = '音訊生成失敗，請檢查網路連線或稍後再試。';
+            if (!ttsAudio.parentElement.querySelector('#ttsOutput')) {
+                ttsAudio.parentElement.insertBefore(messageBox, ttsAudio.nextSibling);
+            }
+        } finally {
+            ttsButton.disabled = false;
+            ttsSpinner.classList.add('hidden');
+        }
+    }
+</script>
+
+</body>
+</html>
