@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 敏捷研討會報名現況儀表板</title>
+    <!-- 引入 Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Chart.js for visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <style>
+        /* --- Rose Gold Dark Theme Styling --- */
+        body {
+            background-color: #0F172A; /* Slate 900 - 深色背景 */
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: #F8FAFC; /* 預設文字顏色為淺色 */
+        }
+        .dashboard-card {
+            background-color: #1E293B; /* Slate 800 - 深色卡片背景 */
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3); /* 更深的陰影以增強立體感 */
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        /* 定義新的玫瑰金色調 */
+        .text-primary { color: #F472B6; } /* Rose 400 - 玫瑰金主色 */
+        .bg-primary { background-color: #F472B6; }
+        .text-secondary { color: #FDE68A; } /* Yellow 200 - 輔助金色 */
+        .border-primary { border-color: #F472B6; }
+        .border-secondary { border-color: #FDE68A; }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #F472B6; /* Rose Gold spinner */
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Modal styles adjustments for dark theme */
+        .modal { z-index: 1000; }
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #1E293B; /* Dark modal background */
+            color: #F8FAFC;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal.open .modal-content {
+            transform: scale(1);
+        }
+        /* Make prose (LLM output) readable */
+        #analysis-results h2, #analysis-results h3 {
+            color: #F472B6; /* Rose Gold headings for clarity */
+            border-bottom: 1px solid #334155; /* Slate 700 divider */
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        #analysis-results p, #analysis-results li {
+            color: #E2E8F0; /* Slate 200 for body text */
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8 p-4 bg-slate-800/80 rounded-xl backdrop-blur-sm shadow-xl border-b-4 border-rose-400">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-rose-400 mb-2">
+                敏捷思維研討會報名現況
+            </h1>
+            <p class="text-lg text-slate-400">
+                即時數據分析 (Real-time Registration Data)
+            </p>
+        </header>
+
+        <!-- Loading Indicator / Error Message -->
+        <div id="loading" class="flex flex-col items-center justify-center p-12 dashboard-card my-8">
+            <div class="spinner"></div>
+            <p class="mt-4 text-xl font-semibold text-slate-300">正在從 Google Sheets 載入資料...</p>
+        </div>
+        
+        <div id="error-message" class="hidden p-6 bg-red-800 border-l-4 border-red-400 text-red-100 font-medium rounded-lg my-8">
+            ⚠️ 資料載入失敗。請**確認 Apps Script 網址已替換**、已部署，且存取權限已設為**「任何人」**。
+            <p id="error-details" class="text-sm mt-1"></p>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="hidden">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                <!-- Total Registrants - Primary Accent (Rose Gold) -->
+                <div class="dashboard-card bg-rose-500 text-white text-center flex flex-col items-center justify-center h-40">
+                    <p class="text-5xl font-extrabold" id="total-registrants">0</p>
+                    <p class="text-lg mt-2 font-semibold">總報名人數</p>
+                </div>
+                <!-- Snack Needed Count - Secondary Accent (Muted Gold) -->
+                <div class="dashboard-card bg-amber-600 text-white text-center flex flex-col items-center justify-center h-40">
+                    <p class="text-5xl font-extrabold" id="snack-yes-count">0</p>
+                    <p class="text-lg mt-2 font-semibold">需要點心人數</p>
+                </div>
+                <!-- Pre-Question Count - Neutral Card (Rose Gold Accent) -->
+                <div class="dashboard-card text-center flex flex-col items-center justify-center border-b-4 border-rose-400 h-40">
+                    <p class="text-5xl font-extrabold text-rose-400" id="question-count">0</p>
+                    <p class="text-lg mt-2 font-semibold text-slate-300">會前提問總數</p>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Chart 1: Job Title Breakdown -->
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">依職稱分佈 (Job Title Breakdown)</h2>
+                    <div class="h-96">
+                        <canvas id="jobTitleChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Snack Needed Breakdown -->
+                <div class="dashboard-card">
+                    <h2 class="text-xl font-bold text-slate-200 mb-4 border-b border-slate-700 pb-2">點心需求比例 (Snack Requirement)</h2>
+                    <div class="h-96">
+                        <canvas id="snackChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Full Registrant List -->
+            <div class="dashboard-card mb-8">
+                <h2 class="text-xl font-bold text-rose-400 mb-4 border-b border-rose-400 pb-2">📋 所有報名者名單 (Full Registrant List)</h2>
+                <div id="registrant-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-h-80 overflow-y-auto p-2">
+                    <!-- Names will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Pre-Questions Table & Analysis Button -->
+            <div class="dashboard-card overflow-x-auto">
+                <div class="flex justify-between items-center mb-4 border-b border-rose-400 pb-2">
+                    <h2 class="text-xl font-bold text-rose-400">會前提問一覽 (Attendee Inquiries)</h2>
+                    <button 
+                        id="analyze-questions-btn"
+                        onclick="showAnalysisModal()"
+                        class="px-4 py-2 bg-rose-500 text-white rounded-lg shadow-md hover:bg-rose-600 transition duration-150 flex items-center disabled:opacity-50"
+                        disabled
+                        title="請先載入報名資料">
+                        ✨ 提問分析與行動建議
+                    </button>
+                </div>
+                
+                <table id="questions-table" class="min-w-full divide-y divide-slate-700">
+                    <thead class="bg-slate-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">時間</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">姓名/單位</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">提問內容</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700" id="questions-tbody">
+                        <!-- Table rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini Analysis Modal -->
+    <div id="analysis-modal" class="modal">
+        <div class="modal-content w-full md:w-3/4 lg:w-1/2">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-2xl font-bold text-rose-400">✨ 敏捷研討會會前提問分析</h3>
+                <button onclick="hideAnalysisModal()" class="text-slate-400 hover:text-slate-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div id="analysis-loading" class="flex items-center justify-center p-12 hidden">
+                <div class="spinner w-8 h-8 border-rose-500 border-t-rose-500/50"></div>
+                <p class="ml-4 text-lg text-slate-400">Gemini 正在分析提問內容，請稍候...</p>
+            </div>
+
+            <div id="analysis-results" class="prose max-w-none text-slate-200">
+                <!-- LLM results will be injected here -->
+            </div>
+
+            <div id="analysis-error" class="text-red-400 mt-4 hidden">
+                連線錯誤或 API 失敗。請檢查您的網路連線或 API 狀態。
+            </div>
+        </div>
+    </div>
+
+<script>
+    // !!! 🔴 關鍵步驟：已替換為您提供的 Web App URL (結尾為 /exec) !!!
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1UAwdg29gaBCElJxzsBL5aHXVAklqRzNy7mu3nok9-MvxmNWkXL8cqmRUZqClanzFug/exec'; 
+    const GEMINI_API_KEY = ""; // 保持空字串，Canvas Runtime 會自動提供
+    const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+
+    const loadingDiv = document.getElementById('loading');
+    const errorDiv = document.getElementById('error-message');
+    const errorDetails = document.getElementById('error-details');
+    const dashboardContent = document.getElementById('dashboard-content');
+    const analyzeBtn = document.getElementById('analyze-questions-btn');
+    const analysisModal = document.getElementById('analysis-modal');
+    const analysisLoading = document.getElementById('analysis-loading');
+    const analysisResults = document.getElementById('analysis-results');
+    const analysisError = document.getElementById('analysis-error');
+
+    let allQuestions = []; // Global variable to store all questions
+
+    // New Chart colors for Rose Gold Dark Theme
+    const CHART_COLORS = [
+        '#F472B6', // Rose 400 (Primary Accent - Rose Gold)
+        '#FDE68A', // Yellow 200 (Secondary Accent - Muted Gold)
+        '#EAB308', // Amber 500
+        '#9CA3AF', // Gray 400
+        '#A78BFA', // Violet 400 (Muted Secondary)
+        '#BEF264', // Lime 400
+    ];
+
+    // --- Modal Control ---
+    function showAnalysisModal() {
+        analysisModal.classList.add('open');
+        generateQuestionAnalysis();
+    }
+
+    function hideAnalysisModal() {
+        analysisModal.classList.remove('open');
+    }
+
+    // --- Utility Functions ---
+
+    // Function to calculate counts for charts
+    function calculateCounts(data, key) {
+        const counts = {};
+        data.forEach(item => {
+            const value = item[key] || '未填寫';
+            counts[value] = (counts[value] || 0) + 1;
+        });
+        return counts;
+    }
+
+    // Function to render a Doughnut/Pie Chart
+    function renderChart(ctxId, type, dataCounts, labelText) {
+        // Find existing chart instance and destroy it to prevent duplicates on refresh
+        const existingChart = Chart.getChart(ctxId);
+        if (existingChart) {
+            existingChart.destroy();
+        }
+
+        const labels = Object.keys(dataCounts);
+        const data = Object.values(dataCounts);
+        
+        // Prepare background colors, cycling through the palette
+        const backgroundColors = labels.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]);
+
+        new Chart(document.getElementById(ctxId), {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: labelText,
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    hoverOffset: 4
+                }]
+            },
+            // Update scales/tooltips for better dark theme visibility
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: { family: 'Inter', size: 14, color: '#E2E8F0' } // Light legend text
+                        }
+                    },
+                    tooltip: {
+                        bodyFont: { family: 'Inter' },
+                        titleFont: { family: 'Inter', weight: 'bold' },
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Gemini API Function: Analyze Questions ---
+    async function generateQuestionAnalysis() {
+        analysisResults.innerHTML = '';
+        analysisError.classList.add('hidden');
+        analysisLoading.classList.remove('hidden');
+
+        if (allQuestions.length === 0) {
+            analysisResults.innerHTML = '<p class="text-lg text-slate-400">目前沒有會前提問可以分析。</p>';
+            analysisLoading.classList.add('hidden');
+            return;
+        }
+
+        // 1. 準備提問資料與活動背景
+        const questionsList = allQuestions.map((q, index) => `${index + 1}. ${q}`).join('\n');
+        
+        const systemPrompt = `
+            Act as a professional event preparation consultant. Analyze the attendee questions for the "Agile Mindset in Education Administration" workshop.
+            Your output MUST be in Traditional Chinese. Use Markdown formatting for readability, specifically:
+            - **主題分析 (Theme Analysis)**: Summarize the main 2-3 themes or concerns raised by the attendees.
+            - **講師準備重點 (Key Speaker Preparation Points)**: Suggest 2-3 specific action items for the presenters to address these themes, referencing the event's focus.
+            - **物資準備建議 (Resource Suggestion)**: Suggest 1-2 practical resources or materials needed for the workshop based on the questions and the workshop context (Kanban/Iteration).
+            Ensure the response is structured using clear Markdown headings (e.g., ## 主題分析).
+        `;
+
+        const userQuery = `
+            活動背景：
+            - 主題：敏捷思維導入教學行政
+            - 目的：分享「敏捷開發 (Agile)」的核心精神，探討如何將其應用於教學部的日常行政、專案管理 (如 QCC、OSCE 籌備) 中，利用「視覺化看板 (Kanban)」與「迭代 (Iteration)」來優化流程。
+            - 聽眾：教育行政人員/教學部人員。
+
+            以下是所有的會前提問（共 ${allQuestions.length} 則）：
+            ---
+            ${questionsList}
+            ---
+            請根據上述背景和提問，提供分析和建議。
+        `;
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            // 不需要 Google Search grounding，因為分析是基於提供的內部資料
+        };
+        
+        // 實施指數退避（Exponential Backoff）重試機制
+        const maxRetries = 3;
+        let attempt = 0;
+        
+        while (attempt < maxRetries) {
+            try {
+                const url = `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                // 解析結果
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                    analysisResults.innerHTML = text;
+                    analysisLoading.classList.add('hidden');
+                    return; // 成功，退出循環
+                } else {
+                    throw new Error("API response structure missing text.");
+                }
+
+            } catch (error) {
+                console.error(`Gemini API Call Attempt ${attempt + 1} Failed:`, error);
+                attempt++;
+                if (attempt < maxRetries) {
+                    const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s delay
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                } else {
+                    analysisError.classList.remove('hidden');
+                    analysisResults.innerHTML = '<p class="text-red-400">無法完成提問分析。請稍後再試。</p>';
+                    analysisLoading.classList.add('hidden');
+                }
+            }
+        }
+    }
+
+    // --- Main Data Fetch and Render ---
+
+    async function fetchRegistrationData() {
+        loadingDiv.classList.remove('hidden');
+        dashboardContent.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+        analyzeBtn.disabled = true; // Disable analysis button initially
+
+        try {
+            console.log('Attempting to fetch data from URL:', APPS_SCRIPT_URL);
+
+            // 格式檢查
+            if (!APPS_SCRIPT_URL.startsWith('https://') || !APPS_SCRIPT_URL.includes('/exec')) {
+                 throw new Error('Apps Script 網址格式不正確。請確認它是一個以 "https://" 開頭，且以 "/exec" 結尾的 Web App URL。');
+            }
+
+            // 使用 GET 請求獲取儀表板資料
+            const response = await fetch(APPS_SCRIPT_URL, {
+                method: 'GET',
+                mode: 'cors',
+                cache: 'no-cache',
+                credentials: 'omit',
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error Status: ${response.status}. 這通常表示 Apps Script 網址無效或部署有誤。`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.message || 'Apps Script 返回失敗訊息。請檢查 Google Sheets 分頁名稱是否為「報名資料」。');
+            }
+
+            renderDashboard(result.data);
+
+        } catch (error) {
+            console.error('Fetching data failed:', error);
+            errorDetails.innerHTML = `錯誤詳情：${error.message || '連線錯誤 (Failed to fetch)。'}
+                <ul class="list-disc list-inside mt-2">
+                    <li>請確認：Apps Script 部署後，「誰擁有存取權」設為**「任何人」**。</li>
+                    <li>請確認：Google Sheets 中的資料分頁名稱是否為**「報名資料」**。</li>
+                </ul>`;
+            errorDiv.classList.remove('hidden');
+        } finally {
+            loadingDiv.classList.add('hidden');
+        }
+    }
+
+    function renderDashboard(data) {
+        if (!data || data.length === 0) {
+            document.getElementById('total-registrants').textContent = '0';
+            document.getElementById('total-registrants').nextElementSibling.textContent = '尚無報名資料';
+            dashboardContent.classList.remove('hidden');
+            
+            // 處理名單和提問列表為空
+            document.getElementById('registrant-list').innerHTML = '<p class="text-slate-400 text-center col-span-5">無報名者。</p>';
+            document.getElementById('questions-tbody').innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-sm text-slate-400">無會前提問。</td></tr>';
+            
+            return;
+        }
+
+        // 1. Calculate Counts
+        const totalCount = data.length;
+        const jobTitleCounts = calculateCounts(data, '職稱');
+        const snackCounts = calculateCounts(data, '是否需要茶水點心');
+        
+        // Filter and store pre-questions in global variable
+        const questionsData = data.filter(item => item['會前提問'] && item['會前提問'].trim() !== '');
+        allQuestions = questionsData.map(item => item['會前提問']);
+        
+        const snackYesCount = snackCounts['是'] || 0;
+        const questionCount = questionsData.length;
+
+        // 2. Update Summary Cards
+        document.getElementById('total-registrants').textContent = totalCount;
+        document.getElementById('snack-yes-count').textContent = snackYesCount;
+        document.getElementById('question-count').textContent = questionCount;
+
+        // 3. Render Charts
+        renderChart('jobTitleChart', 'doughnut', jobTitleCounts, '報名職稱分佈');
+        renderChart('snackChart', 'pie', snackCounts, '點心需求');
+
+        // 4. Render Full Registrant List
+        const registrantListDiv = document.getElementById('registrant-list');
+        registrantListDiv.innerHTML = ''; // Clear previous data
+
+        if (data.length > 0) {
+            data.forEach(item => {
+                const name = item['姓名'] || '未知姓名';
+                const unit = item['單位'] || '未知單位';
+                
+                const div = document.createElement('div');
+                // 使用 text-rose-400 和 text-yellow-200 增強視覺效果
+                div.className = 'p-3 bg-slate-700 rounded-lg shadow-inner hover:bg-slate-600 transition duration-150 cursor-default border-l-4 border-rose-500'; 
+                div.innerHTML = `
+                    <p class="font-semibold text-rose-100">${name}</p>
+                    <p class="text-xs text-slate-400 truncate">${unit}</p>
+                `;
+                registrantListDiv.appendChild(div);
+            });
+        } else {
+             registrantListDiv.innerHTML = '<p class="text-slate-400 text-center col-span-5">無報名者。</p>';
+        }
+
+        // 5. Render Questions Table
+        const tbody = document.getElementById('questions-tbody');
+        tbody.innerHTML = ''; // Clear previous data
+        
+        if (questionsData.length > 0) {
+            questionsData.forEach(item => {
+                const row = tbody.insertRow();
+                row.className = 'hover:bg-slate-700 transition duration-150'; /* Updated hover color */
+
+                // 報名時間
+                row.insertCell().textContent = item['報名時間'].substring(0, 10); // 只顯示日期
+                row.cells[0].className = 'px-6 py-4 whitespace-nowrap text-sm text-slate-400';
+
+                // 姓名/單位
+                row.insertCell().innerHTML = `<div class="font-medium text-slate-100">${item['姓名']}</div>
+                                              <div class="text-xs text-slate-400">${item['單位']}</div>`;
+                row.cells[1].className = 'px-6 py-4 whitespace-nowrap';
+
+                // 提問內容
+                row.insertCell().textContent = item['會前提問'];
+                row.cells[2].className = 'px-6 py-4 text-sm text-slate-200 break-words';
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-4 text-center text-sm text-slate-400">無會前提問。</td></tr>';
+        }
+
+
+        // 6. Enable Analysis Button if there are questions
+        if (questionCount > 0) {
+            analyzeBtn.disabled = false;
+            analyzeBtn.title = `點擊分析 ${questionCount} 則提問`;
+        } else {
+            analyzeBtn.disabled = true;
+            analyzeBtn.title = '尚無會前提問可供分析';
+        }
+
+        // Show content
+        dashboardContent.classList.remove('hidden');
+    }
+    
+    // Initial fetch on load
+    window.onload = fetchRegistrationData;
+
+    // Optional: Auto-refresh data every 60 seconds
+    setInterval(fetchRegistrationData, 60000); 
+
+</script>
+
+</body>
+</html>
